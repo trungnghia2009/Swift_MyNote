@@ -78,11 +78,12 @@ class NoteListTableViewController: SwipeTableViewController {
         tableView.reloadData()
     }
     
-    //Delete category
+    // Delete category and item inside
     override func updateModal(at indexPath: IndexPath) {
         if let categoryForDeletion = categories?[indexPath.row] {
             do {
                 try realm.write {
+                    realm.delete(categoryForDeletion.details[0])
                     realm.delete(categoryForDeletion)
                 }
             } catch {
@@ -90,6 +91,34 @@ class NoteListTableViewController: SwipeTableViewController {
             }
         }
         
+    }
+    
+    // Edit category
+    override func editModal(at indexPath: IndexPath) {
+        if let categoryForEdit = categories?[indexPath.row] {
+            var textField = UITextField()
+            let alert = UIAlertController(title: "Edit Note", message: "", preferredStyle: .alert)
+            let action = UIAlertAction(title: "Ok", style: .default) { (action) in
+                do {
+                    try self.realm.write {
+                        if textField.text != "" {
+                            categoryForEdit.name = textField.text!
+                        }
+                    }
+                } catch {
+                    print("Error editting category, \(error)")
+                }
+                self.tableView.reloadData()
+            }
+            alert.addAction(action)
+            alert.addAction(UIAlertAction(title: "Cancel", style: .destructive, handler: nil))
+            alert.addTextField { (alertTextField) in
+               alertTextField.placeholder = "Edit category"
+               textField = alertTextField
+
+            }
+            present(alert, animated: true, completion: nil)
+        }
     }
     
     //MARK: - Table view delegate
@@ -103,8 +132,6 @@ class NoteListTableViewController: SwipeTableViewController {
             destinationVC.selectedCategory = categories?[indexPath.row]
         } 
     }
-    
-    
 }
 
 //MARK: - Search bar methods
